@@ -22,5 +22,9 @@ import Route from '@ioc:Adonis/Core/Route'
 
 Route.group(() => {
   Route.get('/item', 'ItemsController.index')
+  Route.get('/item/:id', 'ItemsController.getById')
+  Route.post('/item', 'ItemsController.create')
+  Route.patch('/item/:id', 'ItemsController.update')
+  Route.delete('/item/:id', 'ItemsController.delete')
 
 }).prefix('api')
