@@ -10,6 +10,7 @@
 */
 
 import Server from '@ioc:Adonis/Core/Server'
+// import cors from '@koa/cors'
 
 /*
 |--------------------------------------------------------------------------
@@ -41,4 +42,5 @@ Server.middleware.register([
 |
 */
 Server.middleware.registerNamed({
+  auth: () => import('App/Middleware/Auth')
 })
