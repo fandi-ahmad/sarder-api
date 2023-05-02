@@ -1,5 +1,6 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-
+import Application from '@ioc:Adonis/Core/Application'
+import fs from 'fs'
 import Item from "App/Models/Item";
 
 export default class ItemsController {
@@ -15,30 +16,90 @@ export default class ItemsController {
     }
 
     public async create({request, response}:HttpContextContract) {
-        const inputData = (param) => {
-            return request.input(param)
-        }
-        Item.create({
-            item_name: inputData('item_name'),
-            price: inputData('price'),
-            image: inputData('image'),
-            description: inputData('description'),
+        const name = request.input('item_name')
+        const price = request.input('price')
+        const description = request.input('description')
+
+        const image = request.file('image', {
+            size: '10mb',
+            extnames: ['jpg', 'jpeg', 'png'],
         })
+    
+        // validate file upload
+        if (!image) {
+            return response.badRequest('Please select an image to upload')
+        }
+
+        // generate unique filename for uploaded image
+        const uniqueName = `${Date.now()}_${image.clientName}`
+        const filename = `${uniqueName.replace(/ /g,"_")}`
+
+        await image.move(Application.publicPath('uploads'), {
+            name: filename,
+            overwrite: true,
+        })
+
+        // create new item in database
+        await Item.create({
+            item_name: name,
+            price: price,
+            image: filename,
+            description: description,
+        })
+
         return response.created({
-            'created': true
+            created: true,
         })
     }
 
     public async update({request, response, params}:HttpContextContract) {
         const item = await Item.findOrFail(params.id)
-        item.item_name = request.input('item_name')
-        item.price = request.input('price')
-        item.image = request.input('image')
-        item.description = request.input('description')
-        item.save()
+        const name = request.input('item_name')
+        const price = request.input('price')
+        const description = request.input('description')
+      
+        // Check if a new file has been uploaded
+        const image = request.file('image', {
+            size: '2mb',
+            extnames: ['jpg', 'jpeg', 'png'],
+        })
+      
+        if (image) {
+            // Validate file upload
+            if (!image.isValid) {
+                return response.badRequest('Please select a valid image to upload')
+            }
+        
+            // Delete old image file
+            const oldImage = item.image
+            if (oldImage) {
+                const oldImagePath = Application.publicPath(`uploads/${oldImage}`)
+                if (await fs.existsSync(oldImagePath)) {
+                    await fs.unlinkSync(oldImagePath)
+                }
+            }
+        
+            // Generate unique filename for uploaded image
+            const uniqueName = `${Date.now()}_${image.clientName}`
+            const filename = `${uniqueName.replace(/ /g,"_")}`
+            await image.move(Application.publicPath('uploads'), {
+                name: filename,
+                overwrite: true,
+            })
+        
+            // Update item with new image file name
+            item.image = filename
+        }
+        
+        // Update item details
+        item.item_name = name
+        item.price = price
+        item.description = description
+        await item.save()
+    
         return response.status(202).send(item)
     }
-
+      
     public async delete ({params}) {
         const deleteItem = await Item.findOrFail(params.id)
         await deleteItem.delete()
