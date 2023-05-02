@@ -102,6 +102,11 @@ export default class ItemsController {
       
     public async delete ({params}) {
         const deleteItem = await Item.findOrFail(params.id)
+
+        // hapus file gambar terkait item yang akan dihapus
+        const imagePath = Application.publicPath('uploads') + '/' + deleteItem.image
+        fs.unlinkSync(imagePath)
+        
         await deleteItem.delete()
         return deleteItem
     }
