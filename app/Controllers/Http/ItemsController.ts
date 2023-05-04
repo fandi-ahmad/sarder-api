@@ -106,15 +106,22 @@ export default class ItemsController {
     
         return response.status(202).send(item)
     }
-      
-    public async delete ({params}) {
-        const deleteItem = await Item.findOrFail(params.id)
 
-        // hapus file gambar terkait item yang akan dihapus
-        const imagePath = Application.publicPath('uploads') + '/' + deleteItem.image
-        fs.unlinkSync(imagePath)
+    public async delete ({params}) {
+        try {
+            const deleteItem = await Item.findOrFail(params.id)
+
+            // hapus file gambar terkait item yang akan dihapus
+            const imagePath = Application.publicPath('uploads') + '/' + deleteItem.image
+            fs.unlinkSync(imagePath)
+            
+            await deleteItem.delete()
+            return deleteItem
+        } catch (error) {
+            const deleteItem = await Item.findOrFail(params.id)
+            await deleteItem.delete()
+            return deleteItem
+        }
         
-        await deleteItem.delete()
-        return deleteItem
     }
 }
