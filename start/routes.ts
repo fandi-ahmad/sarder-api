@@ -25,6 +25,7 @@ Route.group(() => {
   Route.group(() => {
     Route.get('/item', 'ItemsController.index')
     Route.get('/item/:id', 'ItemsController.getById')
+    Route.get('/item/image/:id', 'ItemsController.getImage')
     Route.post('/item', 'ItemsController.create')
     Route.patch('/item/:id', 'ItemsController.update')
     Route.delete('/item/:id', 'ItemsController.delete')

@@ -15,6 +15,13 @@ export default class ItemsController {
         return item?.serialize()
     }
 
+    public async getImage({ response, params }: HttpContextContract) {
+        const item = await Item.findOrFail(params.id)
+        const imagePath = Application.makePath('public/uploads', item.image)
+    
+        return response.download(imagePath)
+    }
+
     public async create({request, response}:HttpContextContract) {
         const name = request.input('item_name')
         const price = request.input('price')
